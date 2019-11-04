@@ -16,6 +16,20 @@ import javax.persistence.Persistence;
  */
 public class App {
 
+    public static void tableCreate(Scanner sc, EntityManager dbm, String table) {
+        switch (table) {
+            case "Uczniowie":
+                createUczniowie(sc, dbm);
+                break;
+            case "Przedmioty":
+                createPrzedmioty(sc, dbm);
+                break;
+            case "Oceny":
+                createOceny(sc, dbm);
+                break;
+        }
+    }
+
     public static void tableRead(EntityManager dbm, String table) {
         String query = table + ".findAll";
 
@@ -48,16 +62,16 @@ public class App {
         }
     }
 
-    public static void tableCreate(Scanner sc, EntityManager dbm, String table) {
+    public static void tableUpdate(Scanner sc, EntityManager dbm, String table) {
         switch (table) {
             case "Uczniowie":
-                createUczniowie(sc, dbm);
+                updateUczniowie(sc, dbm);
                 break;
             case "Przedmioty":
-                createPrzedmioty(sc, dbm);
+                updatePrzedmioty(sc, dbm);
                 break;
             case "Oceny":
-                createOceny(sc, dbm);
+                updateOceny(sc, dbm);
                 break;
         }
     }
@@ -128,7 +142,7 @@ public class App {
         boolean goFlag = true;
         if (resc2.isEmpty()) {
             System.out.println("Lista przedmiotow jest pusta!");
-        } else if(resc1.isEmpty()) {
+        } else if (resc1.isEmpty()) {
             System.out.println("Lista uczniow jest pusta!");
         } else {
             do {
@@ -137,45 +151,44 @@ public class App {
                 }
                 System.out.print("Wybierz numer przedmiotu z dostepnej powyzej listy: ");
                 newIdPrzedmiotu = sc.nextInt();
-                
+
                 for (Przedmioty p : resc2) {
-                    if(p.getIdPrzedmiotu() == newIdPrzedmiotu){
-                        goFlag=false;
+                    if (p.getIdPrzedmiotu() == newIdPrzedmiotu) {
+                        goFlag = false;
                     }
                 }
-                
+
             } while (goFlag);
-            
-            goFlag=true;
-            
+
+            goFlag = true;
+
             do {
-                for (Uczniowie u: resc1) {
+                for (Uczniowie u : resc1) {
                     System.out.println(u.getIdUcznia() + ". " + u.getImie() + " " + u.getNazwisko());
                 }
                 System.out.print("Wybierz numer ucznia z dostepnej powyzej listy: ");
                 newIdUcznia = sc.nextInt();
-                for (Uczniowie u: resc1) {
-                    if(u.getIdUcznia()==newIdUcznia){
+                for (Uczniowie u : resc1) {
+                    if (u.getIdUcznia() == newIdUcznia) {
                         goFlag = false;
                     }
                 }
-                
+
             } while (goFlag);
-            
-            do{
+
+            do {
                 System.out.print("Wybierz ocene (od 2 do 5):");
                 newOcena = sc.nextInt();
-            }
-            while(newOcena>5 || newOcena<2);
-            
+            } while (newOcena > 5 || newOcena < 2);
+
             Oceny ocena = new Oceny(newIdOceny, newOcena);
-            for(Przedmioty p : resc2){
-                if(p.getIdPrzedmiotu() == newIdPrzedmiotu){
+            for (Przedmioty p : resc2) {
+                if (p.getIdPrzedmiotu() == newIdPrzedmiotu) {
                     ocena.setIdPrzedmiotu(p);
                 }
             }
-            for(Uczniowie u : resc1){
-                if(u.getIdUcznia()==newIdUcznia){
+            for (Uczniowie u : resc1) {
+                if (u.getIdUcznia() == newIdUcznia) {
                     ocena.setIdUcznia(u);
                 }
             }
@@ -186,6 +199,141 @@ public class App {
         }
 
     }
+
+    public static void updateUczniowie(Scanner sc, EntityManager dbm) {
+        List<Uczniowie> resc1 = dbm.createNamedQuery("Uczniowie.findAll").getResultList();
+        int idChoice;
+        String newImie;
+        String newNazwisko;
+        tableRead(dbm, "Uczniowie");
+        do {
+            System.out.print("Podaj ID ucznia, ktorego chcesz edytowac: ");
+            idChoice = sc.nextInt();
+        } while (dbm.find(Uczniowie.class, idChoice) == null);
+
+        Uczniowie uczen = dbm.find(Uczniowie.class, idChoice);
+
+        do {
+            System.out.print("Podaj imie ucznia: ");
+            newImie = sc.nextLine();
+        } while (newImie.length() > 50 || newImie.length() < 3);
+
+        do {
+            System.out.print("Podaj nazwisko ucznia: ");
+            newNazwisko = sc.nextLine();
+        } while (newNazwisko.length() > 50 || newNazwisko.length() < 3);
+
+        uczen.setImie(newImie);
+        uczen.setNazwisko(newNazwisko);
+
+        dbm.getTransaction().begin();
+        dbm.merge(uczen);
+        dbm.getTransaction().commit();
+        System.out.println("Uczen zaktualizowany!");
+
+    }
+
+    public static void updatePrzedmioty(Scanner sc, EntityManager dbm) {
+        List<Przedmioty> resc2 = dbm.createNamedQuery("Przedmioty.findAll").getResultList();
+        int idChoice;
+        String newNazwa;
+        String newNauczyciel;
+        tableRead(dbm, "Przedmioty");
+        do {
+            System.out.print("Podaj ID przedmiotu, ktory chcesz edytowac: ");
+            idChoice = sc.nextInt();
+        } while (dbm.find(Przedmioty.class, idChoice) == null);
+
+        Przedmioty przedmiot = dbm.find(Przedmioty.class, idChoice);
+
+        do {
+            System.out.print("Podaj nazwe przedmiotu: ");
+            newNazwa = sc.nextLine();
+        } while (newNazwa.length() > 50 || newNazwa.length() < 3);
+
+        do {
+            System.out.print("Podaj nazwisko nauczyciela: ");
+            newNauczyciel = sc.nextLine();
+        } while (newNauczyciel.length() > 50 || newNauczyciel.length() < 3);
+
+        przedmiot.setNazwa(newNazwa);
+        przedmiot.setNauczyciel(newNauczyciel);
+
+        dbm.getTransaction().begin();
+        dbm.merge(przedmiot);
+        dbm.getTransaction().commit();
+        System.out.println("Przedmiot zaktualizowany!");
+
+    }
+
+    public static void updateOceny(Scanner sc, EntityManager dbm) {
+        List<Uczniowie> resc1 = dbm.createNamedQuery("Uczniowie.findAll").getResultList();
+        List<Przedmioty> resc2 = dbm.createNamedQuery("Przedmioty.findAll").getResultList();
+        List<Oceny> resc3 = dbm.createNamedQuery("Oceny.findAll").getResultList();
+        int idChoice;
+        int newIdPrzedmiotu, newIdUcznia, newOcena;
+        boolean goFlag = true;
+        
+
+        if (resc2.isEmpty()) {
+            System.out.println("Lista przedmiotow jest pusta!");
+        } else if (resc1.isEmpty()) {
+            System.out.println("Lista uczniow jest pusta!");
+        } else {
+            tableRead(dbm, "Oceny");
+            do {
+                System.out.print("Podaj ID oceny, ktory chcesz edytowac: ");
+                idChoice = sc.nextInt();
+            } while (dbm.find(Oceny.class, idChoice) == null);
+            
+          
+            do {
+
+                for (Przedmioty p : resc2) {
+                    System.out.println(p.getIdPrzedmiotu() + ". " + p.getNazwa());
+                }
+                System.out.print("Wybierz numer przedmiotu z dostepnej powyzej listy: ");
+                newIdPrzedmiotu = sc.nextInt();
+                
+            } while (dbm.find(Przedmioty.class, newIdPrzedmiotu) == null);
+            
+            
+
+            do {
+                for (Uczniowie u : resc1) {
+                    System.out.println(u.getIdUcznia() + ". " + u.getImie() + " " + u.getNazwisko());
+                }
+                System.out.print("Wybierz numer ucznia z dostepnej powyzej listy: ");
+                newIdUcznia = sc.nextInt();
+               
+            } while (dbm.find(Uczniowie.class, newIdUcznia) == null);
+            
+            do {
+                System.out.print("Wybierz ocene (od 2 do 5):");
+                newOcena = sc.nextInt();
+            } while (newOcena > 5 || newOcena < 2);
+            
+            Oceny ocena = dbm.find(Oceny.class, idChoice);
+            
+            for (Przedmioty p : resc2) {
+                if (p.getIdPrzedmiotu() == newIdPrzedmiotu) {
+                    ocena.setIdPrzedmiotu(p);
+                }
+            }
+            for (Uczniowie u : resc1) {
+                if (u.getIdUcznia() == newIdUcznia) {
+                    ocena.setIdUcznia(u);
+                }
+            }
+            dbm.getTransaction().begin();
+            dbm.merge(ocena);
+            dbm.getTransaction().commit();
+            System.out.println("Zaktualizowano ocene!");
+        }
+
+    }
+
+    
 
     public static void menuCreate(Scanner sc, EntityManager dbm) {
         System.out.println("Do jakiej tabeli chcesz utworzyc rekord?");
@@ -230,6 +378,28 @@ public class App {
         }
     }
 
+    public static void menuUpdate(Scanner sc, EntityManager dbm) {
+        System.out.println("Rekord z jakiej tabeli chcesz zaktualizowac?");
+        System.out.println("~~~~");
+        System.out.println("1. Uczniowie\n2. Przedmioty\n3. Oceny");
+
+        int choice = sc.nextInt();
+        switch (choice) {
+            case 1:
+                tableUpdate(sc, dbm, "Uczniowie");
+                break;
+            case 2:
+                tableUpdate(sc, dbm, "Przedmioty");
+                break;
+            case 3:
+                tableUpdate(sc, dbm, "Oceny");
+                break;
+            default:
+                stopFlag = false;
+                break;
+        }
+    }
+
     public static void clearScreen() {
         //beta testing, try not to use this
         System.out.print("\033[H\033[2J");
@@ -257,13 +427,14 @@ public class App {
                     menuRead(sc, dbm);
                     break;
                 case 3:
-
+                    menuUpdate(sc, dbm);
                     break;
                 case 4:
 
                     break;
                 default:
                     stopFlag = false;
+                    System.out.println("Zamykam program...");
                     break;
             }
         }
