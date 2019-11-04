@@ -21,25 +21,92 @@ public class App {
 
         switch (table) {
             case "Uczniowie":
+                System.out.println("~~~~ UCZNIOWIE ~~~\n");
                 List<Uczniowie> res1 = dbm.createNamedQuery(query).getResultList();
                 for (Uczniowie u : res1) {
                     System.out.println(u.getIdUcznia() + ". " + u.getImie() + " " + u.getNazwisko());
                 }
+                System.out.println("\n~~~~~~~~~~~~~~~~\n");
                 break;
             case "Przedmioty":
                 List<Przedmioty> res2 = dbm.createNamedQuery(query).getResultList();
+                System.out.println("~~~~ PRZEDMIOTY ~~~\n");
                 for (Przedmioty p : res2) {
                     System.out.println(p.getIdPrzedmiotu() + ". Przedmiot: " + p.getNazwa() + "Uczy: " + p.getNauczyciel());
                 }
+                System.out.println("\n~~~~~~~~~~~~~~~~~\n");
                 break;
             case "Oceny":
                 List<Oceny> res3 = dbm.createNamedQuery(query).getResultList();
                 System.out.println("~~~~ OCENY ~~~\n");
                 for (Oceny o : res3) {
-                    System.out.println("ID Oceny: " + o.getIdOceny() + " Przedmiot: " + o.getIdPrzedmiotu().getNazwa() 
+                    System.out.println("ID Oceny: " + o.getIdOceny() + " Przedmiot: " + o.getIdPrzedmiotu().getNazwa()
                             + " Otrzymal: " + o.getIdUcznia().getNazwisko() + " " + o.getIdUcznia().getImie() + " Ocena: " + o.getOcena());
                 }
                 System.out.println("\n~~~~~~~~~~~~~~\n");
+                break;
+        }
+    }
+
+    public static void tableCreate(Scanner sc, EntityManager dbm, String table) {
+        switch (table) {
+            case "Uczniowie":
+                createUczniowie(sc, dbm);
+                break;
+            case "Przedmioty":
+                
+                break;
+            case "Oceny":
+                
+                break;
+        }
+    }
+
+    public static void createUczniowie(Scanner sc, EntityManager dbm) {
+        List<Uczniowie> res1 = dbm.createNamedQuery("Uczniowie.findAll").getResultList();
+        int newIdUcznia = res1.get(res1.size()-1).getIdUcznia() + 1;
+        String newImie;
+        String newNazwisko;
+        
+        do {
+            System.out.print("Podaj imie ucznia: ");
+            newImie = sc.nextLine();
+        } 
+        while(newImie.length() > 50 ||  newImie.length() < 3);
+        
+        do {
+            System.out.print("Podaj nazwisko ucznia: ");
+            newNazwisko = sc.nextLine();
+        } 
+        while(newNazwisko.length() > 50 ||  newNazwisko.length() < 3);
+        
+        Uczniowie uczen = new Uczniowie(newIdUcznia, newImie, newNazwisko);
+        dbm.getTransaction().begin();
+        dbm.persist(uczen);
+        dbm.getTransaction().commit();
+        System.out.println("Dodano ucznia!\n");
+        
+    }
+    
+    
+
+    public static void menuCreate(Scanner sc, EntityManager dbm) {
+        System.out.println("Do jakiej tabeli chcesz utworzyc rekord?");
+        System.out.println("~~~~");
+        System.out.println("1. Uczniowie\n2. Przedmioty\n3. Oceny");
+        int choice = sc.nextInt();
+        switch (choice) {
+            case 1:
+                tableCreate(sc, dbm, "Uczniowie");
+                break;
+            case 2:
+                tableRead(dbm, "Przedmioty");
+                break;
+            case 3:
+                tableRead(dbm, "Oceny");
+                break;
+            default:
+                stopFlag = false;
                 break;
         }
     }
@@ -67,7 +134,7 @@ public class App {
     }
 
     public static void clearScreen() {
-        //beta testing
+        //beta testing, try not to use this
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
@@ -87,7 +154,7 @@ public class App {
             int crudChoice = sc.nextInt();
             switch (crudChoice) {
                 case 1:
-                    //
+                    menuCreate(sc, dbm);
                     break;
                 case 2:
                     menuRead(sc, dbm);
