@@ -32,7 +32,7 @@ public class App {
                 List<Przedmioty> res2 = dbm.createNamedQuery(query).getResultList();
                 System.out.println("~~~~ PRZEDMIOTY ~~~\n");
                 for (Przedmioty p : res2) {
-                    System.out.println(p.getIdPrzedmiotu() + ". Przedmiot: " + p.getNazwa() + "Uczy: " + p.getNauczyciel());
+                    System.out.println(p.getIdPrzedmiotu() + ". Przedmiot: " + p.getNazwa() + " Uczy: " + p.getNauczyciel());
                 }
                 System.out.println("\n~~~~~~~~~~~~~~~~~\n");
                 break;
@@ -54,41 +54,138 @@ public class App {
                 createUczniowie(sc, dbm);
                 break;
             case "Przedmioty":
-                
+                createPrzedmioty(sc, dbm);
                 break;
             case "Oceny":
-                
+                createOceny(sc, dbm);
                 break;
         }
     }
 
     public static void createUczniowie(Scanner sc, EntityManager dbm) {
-        List<Uczniowie> res1 = dbm.createNamedQuery("Uczniowie.findAll").getResultList();
-        int newIdUcznia = res1.get(res1.size()-1).getIdUcznia() + 1;
+        List<Uczniowie> resc1 = dbm.createNamedQuery("Uczniowie.findAll").getResultList();
+        int newIdUcznia = resc1.get(resc1.size() - 1).getIdUcznia() + 1;
         String newImie;
         String newNazwisko;
-        
+
         do {
             System.out.print("Podaj imie ucznia: ");
             newImie = sc.nextLine();
-        } 
-        while(newImie.length() > 50 ||  newImie.length() < 3);
-        
+        } while (newImie.length() > 50 || newImie.length() < 3);
+
         do {
             System.out.print("Podaj nazwisko ucznia: ");
             newNazwisko = sc.nextLine();
-        } 
-        while(newNazwisko.length() > 50 ||  newNazwisko.length() < 3);
-        
+        } while (newNazwisko.length() > 50 || newNazwisko.length() < 3);
+
         Uczniowie uczen = new Uczniowie(newIdUcznia, newImie, newNazwisko);
         dbm.getTransaction().begin();
         dbm.persist(uczen);
         dbm.getTransaction().commit();
         System.out.println("Dodano ucznia!\n");
-        
+
     }
-    
-    
+
+    public static void createPrzedmioty(Scanner sc, EntityManager dbm) {
+        List<Przedmioty> resc2 = dbm.createNamedQuery("Przedmioty.findAll").getResultList();
+        int newIdPrzedmiotu = resc2.get(resc2.size() - 1).getIdPrzedmiotu() + 1;
+        String newNazwa;
+        String newNauczyciel;
+        boolean alreadyExist = false;
+        do {
+            System.out.print("Podaj nazwe przedmiotu: ");
+            newNazwa = sc.nextLine();
+        } while (newNazwa.length() > 50 || newNazwa.length() < 3);
+
+        do {
+            System.out.print("Podaj nazwisko nauczyciela: ");
+            newNauczyciel = sc.nextLine();
+        } while (newNauczyciel.length() > 50 || newNauczyciel.length() < 3);
+
+        for (Przedmioty p : resc2) {
+            if (p.getNazwa().equals(newNazwa) && p.getNauczyciel().equals(newNauczyciel)) {
+                alreadyExist = true;
+            }
+        }
+        if (alreadyExist) {
+            System.out.println("Taki rekord juz istnieje!");
+        } else {
+            Przedmioty przedmiot = new Przedmioty(newIdPrzedmiotu, newNazwa, newNauczyciel);
+            dbm.getTransaction().begin();
+            dbm.persist(przedmiot);
+            dbm.getTransaction().commit();
+            System.out.println("Dodano ucznia!\n");
+
+        }
+    }
+
+    public static void createOceny(Scanner sc, EntityManager dbm) {
+        List<Uczniowie> resc1 = dbm.createNamedQuery("Uczniowie.findAll").getResultList();
+        List<Przedmioty> resc2 = dbm.createNamedQuery("Przedmioty.findAll").getResultList();
+        List<Oceny> resc3 = dbm.createNamedQuery("Oceny.findAll").getResultList();
+        int newIdOceny = resc3.get(resc3.size() - 1).getIdOceny() + 1;
+        int newIdPrzedmiotu, newIdUcznia, newOcena;
+        boolean goFlag = true;
+        if (resc2.isEmpty()) {
+            System.out.println("Lista przedmiotow jest pusta!");
+        } else if(resc1.isEmpty()) {
+            System.out.println("Lista uczniow jest pusta!");
+        } else {
+            do {
+                for (Przedmioty p : resc2) {
+                    System.out.println(p.getIdPrzedmiotu() + ". " + p.getNazwa());
+                }
+                System.out.print("Wybierz numer przedmiotu z dostepnej powyzej listy: ");
+                newIdPrzedmiotu = sc.nextInt();
+                
+                for (Przedmioty p : resc2) {
+                    if(p.getIdPrzedmiotu() == newIdPrzedmiotu){
+                        goFlag=false;
+                    }
+                }
+                
+            } while (goFlag);
+            
+            goFlag=true;
+            
+            do {
+                for (Uczniowie u: resc1) {
+                    System.out.println(u.getIdUcznia() + ". " + u.getImie() + " " + u.getNazwisko());
+                }
+                System.out.print("Wybierz numer ucznia z dostepnej powyzej listy: ");
+                newIdUcznia = sc.nextInt();
+                for (Uczniowie u: resc1) {
+                    if(u.getIdUcznia()==newIdUcznia){
+                        goFlag = false;
+                    }
+                }
+                
+            } while (goFlag);
+            
+            do{
+                System.out.print("Wybierz ocene (od 2 do 5):");
+                newOcena = sc.nextInt();
+            }
+            while(newOcena>5 || newOcena<2);
+            
+            Oceny ocena = new Oceny(newIdOceny, newOcena);
+            for(Przedmioty p : resc2){
+                if(p.getIdPrzedmiotu() == newIdPrzedmiotu){
+                    ocena.setIdPrzedmiotu(p);
+                }
+            }
+            for(Uczniowie u : resc1){
+                if(u.getIdUcznia()==newIdUcznia){
+                    ocena.setIdUcznia(u);
+                }
+            }
+            dbm.getTransaction().begin();
+            dbm.persist(ocena);
+            dbm.getTransaction().commit();
+            System.out.println("Dodano ocene!");
+        }
+
+    }
 
     public static void menuCreate(Scanner sc, EntityManager dbm) {
         System.out.println("Do jakiej tabeli chcesz utworzyc rekord?");
@@ -100,10 +197,10 @@ public class App {
                 tableCreate(sc, dbm, "Uczniowie");
                 break;
             case 2:
-                tableRead(dbm, "Przedmioty");
+                tableCreate(sc, dbm, "Przedmioty");
                 break;
             case 3:
-                tableRead(dbm, "Oceny");
+                tableCreate(sc, dbm, "Oceny");
                 break;
             default:
                 stopFlag = false;
